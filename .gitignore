@@ -4,10 +4,10 @@ venv/
 
 ##### CLient #####
 # dependencies
-client_service/node_modules
+**/node_modules
 
 # testing
-client_service/coverage
+**/coverage
 
 # production
-client_service/build
+**/build
