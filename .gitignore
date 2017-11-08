@@ -1,3 +1,13 @@
 venv/
 .vscode/
 
+
+##### CLient #####
+# dependencies
+client_service/node_modules
+
+# testing
+client_service/coverage
+
+# production
+client_service/build
