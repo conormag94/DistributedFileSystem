@@ -26,7 +26,3 @@ sample_files = [
 @app.route('/files', methods=['GET'])
 def files_index():
     return jsonify({'files': sample_files})
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
-
