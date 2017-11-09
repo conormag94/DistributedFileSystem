@@ -1,9 +1,11 @@
+import os
 from flask import Flask, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
 
-app.config.from_object('project.config.DevelopmentConfig')
+app_settings = os.getenv('APP_SETTINGS')
+app.config.from_object(app_settings)
 
 CORS(app)
 
@@ -25,6 +27,14 @@ sample_files = [
         }
 ]
 
+@app.route('/', methods=['GET'])
+def index():
+    return jsonify({
+        'response': 'Index of the file service. Try the /files endpoint to get started'
+    })
+
 @app.route('/files', methods=['GET'])
 def files_index():
-    return jsonify({'files': sample_files})
+    return jsonify({
+        'files': sample_files
+    })
