@@ -1,13 +1,29 @@
 import os
+import datetime
 from flask import Flask, jsonify
 from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
+
+CORS(app)
 
 app_settings = os.getenv('APP_SETTINGS')
 app.config.from_object(app_settings)
 
-CORS(app)
+db = SQLAlchemy(app)
+
+class File(db.Model):
+    __tablename__ = "files"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    filename = db.Column(db.String(128), nullable=False)
+    content = db.Column(db.String(), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False)
+
+    def __init__(self, filename, content):
+        self.filename = filename
+        self.content = content
+        self.created_at = datetime.datetime.utcnow()
 
 sample_files = [
         {
@@ -26,6 +42,8 @@ sample_files = [
             'content': 'A third file to test updating'
         }
 ]
+
+
 
 @app.route('/', methods=['GET'])
 def index():
