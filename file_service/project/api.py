@@ -6,32 +6,16 @@ from project.models import File
 
 files_blueprint = Blueprint('files', __name__)
 
-sample_files = [
-        {
-            'id': 1,
-            'name': 'hello.txt',
-            'content': 'This is a sample txt file'
-        },
-        {
-            'id': 2,
-            'name': 'foo.txt',
-            'content': 'I\'m another file'
-        },
-        {
-            'id': 3,
-            'name': 'bar.txt',
-            'content': 'A third file to test updating'
-        }
-]
-
 @files_blueprint.route('/', methods=['GET'])
 def index():
+    """Root endpoint - does nothing"""
     return jsonify({
         'response': 'Index of the file service. Try the /files endpoint to get started'
     })
 
 @files_blueprint.route('/files', methods=['GET'])
 def list_files():
+    """List all files in db"""
     file_objects = File.query.all()
     files_list = []
     for file in file_objects:
@@ -54,6 +38,12 @@ def list_files():
 
 @files_blueprint.route('/files', methods=['POST'])
 def create_file():
+    """
+    Create a new file.
+    Params:
+        - filename
+        - content
+    """
     data = request.get_json()
     filename = data.get('filename')
     content = data.get('content')
@@ -84,6 +74,7 @@ def create_file():
 
 @files_blueprint.route('/files/<file_id>', methods=['GET'])
 def get_file(file_id):
+    """Get file by id."""
     fail_response = {
         'status': 'fail',
         'message': 'File does not exist'
