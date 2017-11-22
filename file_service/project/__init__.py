@@ -1,16 +1,21 @@
 import os
-import datetime
+
 from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 
-app = Flask(__name__)
+db = SQLAlchemy()
 
-CORS(app)
+def create_app():
+    app = Flask(__name__)
+    CORS(app)
 
-app_settings = os.getenv('APP_SETTINGS')
-app.config.from_object(app_settings)
+    app_settings = os.getenv('APP_SETTINGS')
+    app.config.from_object(app_settings)
 
-db = SQLAlchemy(app)
+    db.init_app(app)
 
-from project import api, models
+    from project.api import files_blueprint
+    app.register_blueprint(files_blueprint)
+
+    return app
