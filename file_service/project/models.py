@@ -13,3 +13,12 @@ class File(db.Model):
         self.filename = filename
         self.content = content
         self.created_at = datetime.datetime.utcnow()
+
+    def to_dict(self):
+        """Export user to dictionary data structure"""
+        return {
+            'id': self.id,
+            'filename': self.filename,
+            'content': self.content,
+            'created_at': self.created_at
+        }

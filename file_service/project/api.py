@@ -19,14 +19,7 @@ def list_files():
     file_objects = File.query.all()
     files_list = []
     for file in file_objects:
-        print(file)
-        file_response = {
-            'id': file.id,
-            'filename': file.filename,
-            'content': file.content,
-            'created_at': file.created_at
-        }
-        files_list.append(file_response)
+        files_list.append(file.to_dict())
     
     response = {
         'status': 'success',
@@ -86,11 +79,7 @@ def get_file(file_id):
         else:
             response = {
                 'status': 'success',
-                'data': {
-                    'id': file.id,
-                    'filename': file.filename,
-                    'content': file.content
-                }
+                'data': file.to_dict()
             }
             return jsonify(response), 200
     except ValueError:
