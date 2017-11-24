@@ -23,7 +23,6 @@ services:
     environment:
       - APP_SETTINGS=project.config.DevelopmentConfig
       - DATABASE_URL=postgres://postgres:postgres@files-db:5432/files_dev
-      - DATABASE_TEST_URL=postgres://postgres:postgres@files-db:5432/files_test
     depends_on:
       files-db:
         condition: service_healthy
@@ -40,7 +39,6 @@ services:
   #   environment:
   #     - APP_SETTINGS=project.config.DevelopmentConfig
   #     - DATABASE_URL=postgres://postgres:postgres@files-db:5432/files_dev
-  #     - DATABASE_TEST_URL=postgres://postgres:postgres@files-db:5432/files_test
   #   depends_on:
   #     files-db:
   #       condition: service_healthy
