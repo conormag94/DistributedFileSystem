@@ -20,7 +20,10 @@ def main():
             print(cmd)
 
 def greeting():
-    print('===== Distributed File System Client =====')
+    print('     DFS:')
+    print('=============')
+    print('list\tList files')
+    print('q\tQuit')
 
 if __name__ == '__main__':
     greeting()
