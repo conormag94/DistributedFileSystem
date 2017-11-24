@@ -8,5 +8,4 @@ FILE_SERVER = f'http://{FILE_SERVER_HOST}:{FILE_SERVER_PORT}/files'
 def list_files():
     response = requests.get(FILE_SERVER).json()
     file_list = response['data']['files']
-    for file in file_list:
-        print(file['filename'], '\t', file['created_at'])
+    return file_list
