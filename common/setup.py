@@ -8,4 +8,7 @@ setup(name="common",
         author_email="conormag94@gmail.com",
         license="MIT",
         packages=["common"],
+        install_requires=[
+            'requests'
+        ],
         zip_safe=False)
