@@ -1,0 +1,1 @@
+-e git://github.com/conormag94/DistributedFileSystem.git#egg=common&subdirectory=common
