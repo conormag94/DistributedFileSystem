@@ -1,6 +1,8 @@
 venv/
 .vscode/
 
+old_client/
+
 **/__pycache__/
 
 ##### CLient #####
