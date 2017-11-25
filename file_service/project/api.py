@@ -29,6 +29,26 @@ def list_files():
     }
     return jsonify(response), 200
 
+@files_blueprint.route('/files/<filename>', methods=['GET'])
+def get_file(filename):
+    """Get file by filename."""
+    fail_response = {
+        'status': 'fail',
+        'message': 'File does not exist'
+    }
+    try:
+        file = File.query.filter_by(filename=filename).first()
+        if not file:
+            return jsonify(fail_response), 404
+        else:
+            response = {
+                'status': 'success',
+                'data': file.to_dict()
+            }
+            return jsonify(response), 200
+    except ValueError:
+        return jsonify(fail_response), 404
+
 @files_blueprint.route('/files', methods=['POST'])
 def create_file():
     """
@@ -65,24 +85,40 @@ def create_file():
         }
         return jsonify(response_object), 400
 
-@files_blueprint.route('/files/<file_id>', methods=['GET'])
-def get_file(file_id):
-    """Get file by id."""
+@files_blueprint.route('/files/<filename>', methods=['PUT'])
+def update_file(filename):
+    """
+    Update a particular file.
+
+    TODO: Add update method to File model to clean up updating
+    """
     fail_response = {
         'status': 'fail',
         'message': 'File does not exist'
     }
     try:
-        file = File.query.filter_by(id=file_id).first()
+        file = File.query.filter_by(filename=filename).first()
         if not file:
             return jsonify(fail_response), 404
         else:
-            response = {
-                'status': 'success',
-                'data': file.to_dict()
-            }
-            return jsonify(response), 200
+            try:
+                data = request.get_json() 
+
+                file.content = data.get('content')
+                file.filename = data.get('filename')
+                db.session.commit()
+
+                response = {
+                    'status': 'success',
+                    'data': file.to_dict()
+                }
+                return jsonify(response), 200
+            except Exception as e:
+                db.session.rollback()
+                response = {
+                    'status': 'fail', 
+                    'message': 'Error when updating file for some reason'
+                }
+                return jsonify(response), 500
     except ValueError:
         return jsonify(fail_response), 404
-
-    
