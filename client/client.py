@@ -14,14 +14,15 @@ def main():
             sys.exit(1)
         if cmd == 'list':
             files = list_files()
+            print(f'{len(files)} file(s) found:')
             for file in files:
                 print(file['filename'], '\t', file['created_at'])
         else:
             print(cmd)
 
 def greeting():
-    print('     DFS:')
-    print('=============')
+    print('Commands:')
+    print('---------')
     print('list\tList files')
     print('q\tQuit')
 
