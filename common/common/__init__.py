@@ -12,6 +12,19 @@ def list_files():
     file_list = response['data']['files']
     return file_list
 
+def get_file(filename):
+    url = f'{FILE_SERVER}/{filename}'
+    file_obj = requests.get(url).json()
+    return file_obj['data']
+
+def create_file(filename, content):
+    json_body = {
+        "filename": filename,
+        "content": content
+    }
+    response = requests.post(FILE_SERVER, json=json_body).json()
+    return response
+
 def compute_hash(data):
     """
     Return the hash of a file's contents
