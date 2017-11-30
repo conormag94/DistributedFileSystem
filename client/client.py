@@ -25,17 +25,26 @@ def get_file(filename, file_server):
     r = requests.get(url)
     return r
 
+def greeting():
+    print('Commands:')
+    print('---------')
+    print('ls\tList files')
+    print('q\tQuit')
+
 def main():
     while(True):
         cmd = input(prompt).split(' ')
+        
         if cmd[0] == 'q':
             sys.exit(1)
+        
         elif cmd[0] == 'ls':
             files = list_files(file_server="1")
             print(f'{len(files)} file(s) found:')
             print("------------------")
             for file in files:
                 print(file)
+        
         elif cmd[0] == 'get':
             filename = cmd[1]
             response = get_file(filename, file_server="1")
@@ -43,14 +52,10 @@ def main():
             save_path = os.path.join(DOWNLOADS_LOCATION, filename)
             with open(save_path, 'wb') as f:
                 f.write(response.content)
+        
         else:
-            print(cmd)
-
-def greeting():
-    print('Commands:')
-    print('---------')
-    print('ls\tList files')
-    print('q\tQuit')
+            print("Error: Unrecognized command")
+            greeting()
 
 if __name__ == '__main__':
     greeting()
