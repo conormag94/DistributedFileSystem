@@ -1,124 +1,52 @@
-from flask import Blueprint, jsonify, request
+import os
+
+from flask import Blueprint, jsonify, request, send_from_directory
 from sqlalchemy import exc
+from werkzeug.utils import secure_filename
 
 from project import db
 from project.models import File
 
+from flask import current_app as app
+
 files_blueprint = Blueprint('files', __name__)
 
-@files_blueprint.route('/', methods=['GET'])
-def index():
-    """Root endpoint - does nothing"""
-    return jsonify({
-        'response': 'Index of the file service. Try the /files endpoint to get started'
-    })
-
 @files_blueprint.route('/files', methods=['GET'])
-def list_files():
-    """List all files in db"""
-    file_objects = File.query.all()
-    files_list = []
-    for file in file_objects:
-        files_list.append(file.to_dict())
-    
+def index():
+    files_list = os.listdir(app.config['FILES_FOLDER'])
     response = {
-        'status': 'success',
-        'data': {
-            'files': files_list
-        }
+        "status": "success",
+        "files": files_list
     }
-    return jsonify(response), 200
+    return jsonify(response)
 
 @files_blueprint.route('/files/<filename>', methods=['GET'])
-def get_file(filename):
-    """Get file by filename."""
-    fail_response = {
-        'status': 'fail',
-        'message': 'File does not exist'
-    }
-    try:
-        file = File.query.filter_by(filename=filename).first()
-        if not file:
-            return jsonify(fail_response), 404
-        else:
-            response = {
-                'status': 'success',
-                'data': file.to_dict()
-            }
-            return jsonify(response), 200
-    except ValueError:
-        return jsonify(fail_response), 404
+def test_file_get(filename):
+    if filename not in os.listdir(app.config['FILES_FOLDER']):
+        return "File not found", 404
+    return send_from_directory(app.config['FILES_FOLDER'], filename)
 
 @files_blueprint.route('/files', methods=['POST'])
-def create_file():
-    """
-    Create a new file.
-    Params:
-        - filename
-        - content
-    """
-    data = request.get_json()
-    filename = data.get('filename')
-    content = data.get('content')
+def test_file():
+    if 'user_file' not in request.files:
+        return "No file attached", 400
     try:
-        file = File.query.filter_by(filename=filename).first()
-        if not file:
-            db.session.add(File(filename=filename, content=content))
-            db.session.commit()
-            
-            response = {
-                'status': 'success',
-                'message': f'{filename} was added'
-            }
-            return jsonify(response), 201
-        else:
-            response_object = {
-                'status': 'fail',
-                'message': 'Sorry. That filename already exists.'
-            }
-            return jsonify(response_object), 400
-    except exc.IntegrityError as e:
-        db.session.rollback()
-        response_object = {
-            'status': 'fail',
-            'message': 'Invalid payload.'
-        }
-        return jsonify(response_object), 400
+        file = request.files['user_file']
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['FILES_FOLDER'], filename))
+        return "File saved", 200
+    except Exception as e:
+        print(e)
+        return "Unable to create or delete file", 500
 
-@files_blueprint.route('/files/<filename>', methods=['PUT'])
-def update_file(filename):
-    """
-    Update a particular file.
-
-    TODO: Add update method to File model to clean up updating
-    """
-    fail_response = {
-        'status': 'fail',
-        'message': 'File does not exist'
-    }
+@files_blueprint.route('/files/<filename>', methods=['DELETE'])
+def test_file_delete(filename):
+    if filename not in os.listdir(app.config['FILES_FOLDER']):
+        return "File not found", 404
     try:
-        file = File.query.filter_by(filename=filename).first()
-        if not file:
-            return jsonify(fail_response), 404
-        else:
-            try:
-                data = request.get_json() 
+        filepath = os.path.join(app.config['FILES_FOLDER'], filename)
+        os.remove(filepath) 
+        return "File deleted", 200
+    except OSError:
+        return "Error while deleting file", 500
 
-                file.content = data.get('content')
-                file.filename = data.get('filename')
-                db.session.commit()
-
-                response = {
-                    'status': 'success',
-                    'data': file.to_dict()
-                }
-                return jsonify(response), 200
-            except Exception as e:
-                db.session.rollback()
-                response = {
-                    'status': 'fail', 
-                    'message': 'Error when updating file for some reason'
-                }
-                return jsonify(response), 500
-    except ValueError:
-        return jsonify(fail_response), 404
