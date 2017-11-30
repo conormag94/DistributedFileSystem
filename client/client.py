@@ -7,7 +7,7 @@ import requests
 
 prompt = '\033[1;32m' + '> ' + '\033[0;0m'
 
-DOWNLOADS_LOCATION = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'user_files')
+CACHE_LOCATION = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cached_files')
 FILE_SERVER_HOST = 'http://192.168.99.100'
 
 FILE_SERVER_URLS = {
@@ -49,7 +49,7 @@ def main():
             filename = cmd[1]
             response = get_file(filename, file_server="1")
 
-            save_path = os.path.join(DOWNLOADS_LOCATION, filename)
+            save_path = os.path.join(CACHE_LOCATION, filename)
             with open(save_path, 'wb') as f:
                 f.write(response.content)
         
