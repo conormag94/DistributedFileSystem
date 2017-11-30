@@ -2,28 +2,6 @@ version: '2.1'
 
 services:
 
-  files-db:
-    container_name: files-db
-    build: ./project/db
-    ports:
-        - 5435:5432  # expose ports - HOST:CONTAINER
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    healthcheck:
-      test: exit 0
-    
-  files-db-2:
-    container_name: files-db-2
-    build: ./project/db
-    ports:
-        - 5436:5432  # expose ports - HOST:CONTAINER
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    healthcheck:
-      test: exit 0
-
   file-service:
     container_name: file-service
     build: .
@@ -33,12 +11,6 @@ services:
       - 5001:5000 # expose ports - HOST:CONTAINER
     environment:
       - APP_SETTINGS=project.config.DevelopmentConfig
-      - DATABASE_URL=postgres://postgres:postgres@files-db:5432/files_dev
-    depends_on:
-      files-db:
-        condition: service_healthy
-    links:
-      - files-db
     
   file-service-2:
     container_name: file-service-2
@@ -49,9 +21,3 @@ services:
       - 5002:5000 # expose ports - HOST:CONTAINER
     environment:
       - APP_SETTINGS=project.config.DevelopmentConfig
-      - DATABASE_URL=postgres://postgres:postgres@files-db-2:5432/files_dev
-    depends_on:
-      files-db:
-        condition: service_healthy
-    links:
-      - files-db-2
