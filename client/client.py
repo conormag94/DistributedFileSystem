@@ -45,15 +45,19 @@ def main():
             print(f'{len(files)} file(s) found:')
             print("------------------")
             for file in files:
-                print(file)
+                print(file["filename"])
         
         elif cmd[0] == 'get':
             filename = cmd[1]
             response = get_file(filename)
-
-            save_path = os.path.join(CACHE_LOCATION, filename)
-            with open(save_path, 'wb') as f:
-                f.write(response.content)
+            if response.status_code == 200:
+                save_path = os.path.join(CACHE_LOCATION, filename)
+                with open(save_path, 'wb') as f:
+                    f.write(response.content)
+                    print(f"\'{filename}\' saved to {save_path}")
+            else:
+                error_msg = response.json()["message"]
+                print(f"\'{filename}\': {error_msg}")
         
         else:
             print("Error: Unrecognized command")
