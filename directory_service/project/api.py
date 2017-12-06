@@ -1,4 +1,5 @@
 import os
+import random
 import sys
 
 import requests
@@ -26,26 +27,31 @@ file_servers = [
 def index():
     return "Directory Server", 200
 
-@directory.route('/locate/<filename>', methods=['GET'])
-def locate_file(filename):
-    """TODO: Remove hardcoded file server location"""
-    
-    file_url = file_servers[0]
-    response = {
-        "status": "success",
-        "file_location": file_url,
+@directory.route('/files/<filename>', methods=['GET'])
+def get_file(filename):
+    """Get a file from whichever file server its stored on."""
+    fail_response = {
+        'status': 'fail',
+        'message': 'File does not exist'
     }
-
-    return jsonify(response), 200
+    try:
+        file_url = File.query.filter_by(filename=filename).first()
+        if not file_url:
+            return jsonify(fail_response), 404
+        else:
+            file_url = file_url.to_dict()["url"]
+            r = requests.get(f"{file_url}/{filename}")
+            return r.content, r.status_code
+    except ValueError:
+        return jsonify(fail_response), 404
 
 @directory.route('/files', methods=['GET'])
 def list_files():
 
     filenames = []
-    for server in file_servers:
-        r = requests.get(f"{server}/files")
-        data = r.json()
-        filenames += data["files"] 
+    files = File.query.all()
+    for file in files:
+        filenames.append(file.to_dict())
 
     response = {
         "status": "success",
@@ -58,12 +64,13 @@ def create_file():
     if 'user_file' not in request.files:
         return "No file attached", 400
     file = request.files["user_file"]
-    r = requests.post(f"{file_server_1}/files", files={"user_file": (file.filename, file)})
+    fs = random.choice(file_servers)
+    r = requests.post(f"{fs}/files", files={"user_file": (file.filename, file)})
     if r.status_code == 200:
 
         try:
             filename = secure_filename(file.filename)
-            url = f"{file_server_1}/files"
+            url = f"{fs}/files"
         
             file_obj = File(filename=filename, url=url)
             db.session.add(file_obj)
