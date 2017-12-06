@@ -17,13 +17,13 @@ def index():
     return jsonify(response)
 
 @files_blueprint.route('/files/<filename>', methods=['GET'])
-def test_file_get(filename):
+def get_file(filename):
     if filename not in os.listdir(app.config['FILES_FOLDER']):
         return "File not found", 404
     return send_from_directory(app.config['FILES_FOLDER'], filename)
 
 @files_blueprint.route('/files', methods=['POST'])
-def test_file():
+def create_file():
     if 'user_file' not in request.files:
         return "No file attached", 400
     try:
@@ -36,7 +36,7 @@ def test_file():
         return "Unable to create or delete file", 500
 
 @files_blueprint.route('/files/<filename>', methods=['DELETE'])
-def test_file_delete(filename):
+def delete_file(filename):
     if filename not in os.listdir(app.config['FILES_FOLDER']):
         return "File not found", 404
     try:
