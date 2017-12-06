@@ -1,4 +1,5 @@
 import os
+import sys
 
 import requests
 
@@ -37,7 +38,7 @@ def locate_file(filename):
 
     return jsonify(response), 200
 
-@directory.route('/list', methods=['GET'])
+@directory.route('/files', methods=['GET'])
 def list_files():
 
     filenames = []
@@ -51,5 +52,28 @@ def list_files():
         "files": filenames
     }
     return jsonify(response), 200
+
+@directory.route('/files', methods=['POST'])
+def create_file():
+    if 'user_file' not in request.files:
+        return "No file attached", 400
+    file = request.files["user_file"]
+    r = requests.post(f"{file_server_1}/files", files={"user_file": (file.filename, file)})
+    if r.status_code == 200:
+
+        try:
+            filename = secure_filename(file.filename)
+            url = f"{file_server_1}/files"
+        
+            file_obj = File(filename=filename, url=url)
+            db.session.add(file_obj)
+            db.session.commit()
+
+            return jsonify(file_obj.to_dict()), 200
+        except Exception as e:
+            db.session.rollback()
+            return "Unable to store in directory server. Was database created? File still exists on FS", 500
+    else:
+        return (r.content), r.status_code
 
 
