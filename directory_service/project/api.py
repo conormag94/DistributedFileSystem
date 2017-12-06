@@ -27,6 +27,20 @@ file_servers = [
 def index():
     return "Directory Server", 200
 
+@directory.route('/files', methods=['GET'])
+def list_files():
+
+    filenames = []
+    files = File.query.all()
+    for file in files:
+        filenames.append(file.to_dict())
+
+    response = {
+        "status": "success",
+        "files": filenames
+    }
+    return jsonify(response), 200
+
 @directory.route('/files/<filename>', methods=['GET'])
 def get_file(filename):
     """Get a file from whichever file server its stored on."""
@@ -44,20 +58,6 @@ def get_file(filename):
             return r.content, r.status_code
     except ValueError:
         return jsonify(fail_response), 404
-
-@directory.route('/files', methods=['GET'])
-def list_files():
-
-    filenames = []
-    files = File.query.all()
-    for file in files:
-        filenames.append(file.to_dict())
-
-    response = {
-        "status": "success",
-        "files": filenames
-    }
-    return jsonify(response), 200
 
 @directory.route('/files', methods=['POST'])
 def create_file():

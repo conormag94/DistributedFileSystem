@@ -59,6 +59,9 @@ def main():
                 error_msg = response.json()["message"]
                 print(f"\'{filename}\': {error_msg}")
         
+        elif cmd[0] == 'upload':
+            print("Upload not yet implemented")
+        
         else:
             print("Error: Unrecognized command")
             greeting()
