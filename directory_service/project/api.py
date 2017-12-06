@@ -83,4 +83,25 @@ def create_file():
     else:
         return (r.content), r.status_code
 
+@directory.route('/files/<filename>', methods=['DELETE'])
+def delete_file(filename):
+
+    fail_response = {
+        'status': 'fail',
+        'message': 'File does not exist'
+    }
+    try:
+        file = File.query.filter_by(filename=filename).first()
+        if not file:
+            return jsonify(fail_response), 404
+        else:
+            url = file.to_dict()["url"] + f"/{filename}"
+            r = requests.delete(url)
+            if r.status_code == 200:
+                db.session.delete(file)
+                db.session.commit()
+            return r.content, r.status_code
+    except expression as identifier:
+        return jsonify(fail_response), 404
+
 
