@@ -15,13 +15,15 @@ FILE_SERVER_URLS = {
     "2": f"{FILE_SERVER_HOST}:5002/files"
 }
 
-def list_files(file_server):
-    url = FILE_SERVER_URLS[file_server]
-    r = requests.get(url).json()
-    return r['files']
+DIRECTORY_SERVICE = "http://192.168.99.100:5000"
 
-def get_file(filename, file_server):
-    url = FILE_SERVER_URLS[file_server] + '/' + filename
+def list_files():
+    url = f"{DIRECTORY_SERVICE}/files"
+    r = requests.get(url).json()
+    return r
+
+def get_file(filename):
+    url = f"{DIRECTORY_SERVICE}/files/{filename}"
     r = requests.get(url)
     return r
 
@@ -39,7 +41,7 @@ def main():
             sys.exit(1)
         
         elif cmd[0] == 'ls':
-            files = list_files(file_server="1")
+            files = list_files()["files"]
             print(f'{len(files)} file(s) found:')
             print("------------------")
             for file in files:
@@ -47,7 +49,7 @@ def main():
         
         elif cmd[0] == 'get':
             filename = cmd[1]
-            response = get_file(filename, file_server="1")
+            response = get_file(filename)
 
             save_path = os.path.join(CACHE_LOCATION, filename)
             with open(save_path, 'wb') as f:
