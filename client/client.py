@@ -31,6 +31,7 @@ def greeting():
     print('Commands:')
     print('---------')
     print('ls\tList files')
+    print('')
     print('q\tQuit')
 
 def main():
@@ -41,8 +42,15 @@ def main():
             sys.exit(1)
         
         elif cmd[0] == 'ls':
+            cached_files = os.listdir(CACHE_LOCATION)
+            print(f"{len(cached_files)} cached file(s)")
+            print("------------------")
+
+            for file in cached_files:
+                print(file)
+
             files = list_files()["files"]
-            print(f'{len(files)} file(s) found:')
+            print(f'\n{len(files)} remote file(s):')
             print("------------------")
             for file in files:
                 print(file["filename"])
@@ -60,6 +68,15 @@ def main():
                 print(f"\'{filename}\': {error_msg}")
         
         elif cmd[0] == 'upload':
+            filepath = os.path.expanduser(cmd[1])
+            filename = os.path.basename(filepath)
+            if not os.path.exists(filepath):
+                print(f"{filename} not found on this file system")
+            else:
+                with open(filepath, 'rb') as f:
+                    url = f"{DIRECTORY_SERVICE}/files"
+                    r = requests.post(url, files={"user_file": (filename, f)})
+                    print(r.status_code, "-", r.content)
             print("Upload not yet implemented")
         
         else:
