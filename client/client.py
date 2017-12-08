@@ -11,6 +11,10 @@ CACHE_LOCATION = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cache
 
 DIRECTORY_SERVICE = "http://192.168.99.100:5000"
 
+def is_cached(filename):
+    cached_file = os.path.join(CACHE_LOCATION, filename)
+    return os.path.exists(cached_file)
+
 def list_files():
     """
     Get list of all files from the directory service.
@@ -31,11 +35,11 @@ def read_file(filename):
     """
     Print the contents of a locally cached file.
     """
-    cached_file = os.path.join(CACHE_LOCATION, filename)
-    if not os.path.exists(cached_file):
+    if not is_cached(filename):
         print(f"{filename} not cached locally")
         print(f"You may need to open it first with the \'open\' command")
     else:
+        cached_file = os.path.join(CACHE_LOCATION, filename)
         filesize = os.stat(cached_file).st_size
         with open(cached_file, 'rb') as f:
             print('\033[1;35m', end="")
@@ -46,12 +50,13 @@ def read_file(filename):
 def greeting():
     print('Commands:')
     print('---------')
-    print('  ls            - List files (remote and cached)')
-    print('  open <file>   - Download file from remote file system')
-    print('  read <file>   - Read contents of locally cached file (.txt files only)')
-    print('  upload <file> - Upload a file to the DFS')
-    print('  help          - Show this menu again')
-    print('  q             - Quit')
+    print('  ls                   - List files (remote and cached)')
+    print('  open <file>          - Download file from remote file system')
+    print('  read <file>          - Read contents of locally cached file (.txt files only)')
+    print('  write <file> <data>  - Write <data> to locally cached file (.txt files only)')
+    print('  upload <file>        - Upload a file to the DFS')
+    print('  help                 - Show this menu again')
+    print('  q                    - Quit')
     print('---------')
 
 def main():
@@ -89,6 +94,18 @@ def main():
         elif cmd[0] == 'read':
             filename = cmd[1]
             read_file(filename)
+        elif cmd[0] == 'write':
+            filename = cmd[1]
+            if not is_cached(filename):
+                print(f"{filename} not cached locally")
+                print(f"You may need to open it first with the \'open\' command")
+            else:
+                data = " ".join(cmd[2:])
+                cached_file = os.path.join(CACHE_LOCATION, filename)
+                with open(cached_file, 'wb') as f:
+                    f.write(data.encode())
+                    print("Written sucessfully")
+            
         elif cmd[0] == 'upload':
             filepath = os.path.expanduser(cmd[1])
             filename = os.path.basename(filepath)
