@@ -11,7 +11,6 @@ services:
       - 5001:5000 # expose ports - HOST:CONTAINER
     environment:
       - APP_SETTINGS=project.config.DevelopmentConfig
-      - MY_URL=http://192.168.99.100:5001
     
   file-service-2:
     container_name: file-service-2
@@ -22,7 +21,6 @@ services:
       - 5002:5000 # expose ports - HOST:CONTAINER
     environment:
       - APP_SETTINGS=project.config.DevelopmentConfig
-      - MY_URL=http://192.168.99.100:5002
 
   directory-db:
     container_name: directory-db
@@ -45,10 +43,12 @@ services:
     environment:
       - APP_SETTINGS=project.config.DevelopmentConfig
       - DATABASE_URL=postgres://postgres:postgres@directory-db:5432/directory_dev
-      - FS1_URL=http://192.168.99.100:5001
-      - FS2_URL=http://192.168.99.100:5002
+      - FS1_URL=http://file-service:5000   # Can refer to service by name instead of ip
+      - FS2_URL=http://file-service-2:5000 # Docker figures out the routing
     depends_on:
       directory-db:
         condition: service_healthy
     links:
       - directory-db
+      - file-service
+      - file-service-2
