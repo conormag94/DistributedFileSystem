@@ -8,12 +8,6 @@ import requests
 prompt = '\033[1;32m' + '> ' + '\033[0;0m'
 
 CACHE_LOCATION = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cached_files')
-FILE_SERVER_HOST = 'http://192.168.99.100'
-
-FILE_SERVER_URLS = {
-    "1": f"{FILE_SERVER_HOST}:5001/files",
-    "2": f"{FILE_SERVER_HOST}:5002/files"
-}
 
 DIRECTORY_SERVICE = "http://192.168.99.100:5000"
 
@@ -31,7 +25,8 @@ def greeting():
     print('Commands:')
     print('---------')
     print('ls\tList files')
-    print('')
+    print('open <filename>\tDownload file from remote file system')
+    print('upload <filepath>\tUpload a file to the DFS')
     print('q\tQuit')
 
 def main():
@@ -55,7 +50,7 @@ def main():
             for file in files:
                 print(file["filename"])
         
-        elif cmd[0] == 'get':
+        elif cmd[0] == 'open':
             filename = cmd[1]
             response = get_file(filename)
             if response.status_code == 200:
