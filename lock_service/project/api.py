@@ -1,3 +1,5 @@
+import sys
+
 from flask import Blueprint, jsonify, request
 from sqlalchemy import exc
 
@@ -26,10 +28,10 @@ def list_locks():
     }
     return jsonify(response), 200
 
-@lock.route('/locks/<file_id>', methods=['GET'])
-def check_lock(file_id):
+@lock.route('/locks/<id>', methods=['GET'])
+def check_lock(id):
 
-    lock = FileLock.query.filter_by(file_id=file_id).first()
+    lock = FileLock.query.filter_by(id=id).first()
     if not lock:
         response = {
             "status": "unlocked",
@@ -45,21 +47,21 @@ def check_lock(file_id):
     return jsonify(response), code
 
 @lock.route('/locks', methods=['POST'])
-def create_lock():
+def lock_file():
     params = request.get_json()
     filename = params.get('filename')
-    file_id = params.get('file_id')
-    owner = params.get('owner')
+    file_id = params.get('id')
+    user = params.get('user')
 
-    if filename is None or file_id is None or owner is None:
+    if filename is None or file_id is None or user is None:
         response = {
             "status": "fail",
-            "message": "Bad request. Need filename, file_id, and owner fields"
+            "message": "Bad request. Need filename, id, and user fields"
         }
         return jsonify(response), 400
     else:
         try:
-            lock = FileLock(filename=filename, file_id=file_id, owner=owner)
+            lock = FileLock(filename=filename, id=file_id, user=user)
             db.session.add(lock)
             db.session.commit()
             response = {
@@ -70,3 +72,28 @@ def create_lock():
         except Exception as e:
             print(e)
             return jsonify({"status": "fail", "message": "Unable to lock file"}), 500
+
+@lock.route('/locks/<id>', methods=['DELETE'])
+def unlock_file(id):
+    user = request.headers.get('user')
+    if not user:
+        response = {
+            "status": "fail",
+            "message": "No user specified"
+        }
+        return jsonify(response), 400
+
+    lock = FileLock.query.filter_by(id=id).first()
+    if not lock:
+        return jsonify({"status": "fail", "message": "Lock not found"}), 404
+    
+    if user != lock.to_dict()["user"]:
+        return jsonify({"status": "fail", "message": f"User {user} does not own lock"}), 403
+    else:
+        try:
+            db.session.delete(lock)
+            db.session.commit()
+            return jsonify({"status": "success", "message": "File unlocked"}), 200
+        except Exception as e:
+            print(e, file=sys.stdout)
+            return jsonify({"status": "fail", "message": "Something went wrong"}), 500

@@ -114,7 +114,7 @@ def delete_file(filename):
                 db.session.delete(file)
                 db.session.commit()
             return r.content, r.status_code
-    except expression as identifier:
+    except Exception as e:
         return jsonify(fail_response), 404
 
 
