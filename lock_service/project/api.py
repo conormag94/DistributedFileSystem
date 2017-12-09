@@ -26,3 +26,21 @@ def list_locks():
     }
     return jsonify(response), 200
 
+@lock.route('/locks/<file_id>', methods=['GET'])
+def check_lock(file_id):
+
+    lock = FileLock.query.filter_by(file_id=file_id).first()
+    if not lock:
+        response = {
+            "status": "fail",
+            "message": "Lock not found"
+        }
+        code = 404
+    else:
+        response = {
+            "status": "success",
+            "lock": lock.to_dict()
+        }
+        code = 200
+    return jsonify(response), code
+
