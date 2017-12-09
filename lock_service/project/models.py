@@ -2,9 +2,8 @@ from project import db
 
 class FileLock(db.Model):
     __tablename__ = "locks"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    file_id = db.Column(db.Integer, primary_key=True, nullable=False)
     filename = db.Column(db.String(128), nullable=False)
-    file_id = db.Column(db.Integer)
     owner = db.Column(db.String(128), nullable=False)
 
     def __init__(self, filename, file_id, owner):
@@ -15,7 +14,6 @@ class FileLock(db.Model):
     def to_dict(self):
         """Export user to dictionary data structure"""
         return {
-            'id': self.id,
             'filename': self.filename,
             'file_id': self.file_id,
             'owner': self.owner

@@ -32,15 +32,41 @@ def check_lock(file_id):
     lock = FileLock.query.filter_by(file_id=file_id).first()
     if not lock:
         response = {
-            "status": "fail",
+            "status": "unlocked",
             "message": "Lock not found"
         }
         code = 404
     else:
         response = {
-            "status": "success",
+            "status": "locked",
             "lock": lock.to_dict()
         }
         code = 200
     return jsonify(response), code
 
+@lock.route('/locks', methods=['POST'])
+def create_lock():
+    params = request.get_json()
+    filename = params.get('filename')
+    file_id = params.get('file_id')
+    owner = params.get('owner')
+
+    if filename is None or file_id is None or owner is None:
+        response = {
+            "status": "fail",
+            "message": "Bad request. Need filename, file_id, and owner fields"
+        }
+        return jsonify(response), 400
+    else:
+        try:
+            lock = FileLock(filename=filename, file_id=file_id, owner=owner)
+            db.session.add(lock)
+            db.session.commit()
+            response = {
+                "status": "success",
+                "lock": lock.to_dict()
+            }
+            return jsonify(response), 201
+        except Exception as e:
+            print(e)
+            return jsonify({"status": "fail", "message": "Unable to lock file"}), 500
