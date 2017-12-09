@@ -15,6 +15,9 @@ def is_cached(filename):
     cached_file = os.path.join(CACHE_LOCATION, filename)
     return os.path.exists(cached_file)
 
+def cache_path(filename):
+    return os.path.join(CACHE_LOCATION, filename)
+
 def list_files():
     """
     Get list of all files from the directory service.
@@ -52,6 +55,7 @@ def greeting():
     print('---------')
     print('  ls                   - List files (remote and cached)')
     print('  open <file>          - Download file from remote file system')
+    print('  close <file>         - Send any local reads/writes back to remote file system')
     print('  read <file>          - Read contents of locally cached file (.txt files only)')
     print('  write <file> <data>  - Write <data> to locally cached file (.txt files only)')
     print('  upload <file>        - Upload a file to the DFS')
@@ -62,6 +66,8 @@ def greeting():
 def main():
     while(True):
         cmd = input(prompt).split(' ')
+        if len(cmd) > 1:
+            filename = cmd[1]
         
         if cmd[0] == 'q':
             sys.exit(1)
@@ -81,7 +87,6 @@ def main():
                 print(file["filename"])
         
         elif cmd[0] == 'open':
-            filename = cmd[1]
             response = get_file(filename)
             if response.status_code == 200:
                 save_path = os.path.join(CACHE_LOCATION, filename)
@@ -91,11 +96,19 @@ def main():
             else:
                 error_msg = response.json()["message"]
                 print(f"\'{filename}\': {error_msg}")
+        elif cmd[0] == 'close':
+            if not is_cached(filename):
+                print(f"{filename} not cached locally")
+                print(f"You may need to open it first with the \'open\' command")
+            else:
+                filepath = cache_path(filename)
+                with open(filepath, 'rb') as f:
+                    url = f"{DIRECTORY_SERVICE}/files/{filename}"
+                    r = requests.put(url, files={'user_file': (filename, f)})
+                    print(r.status_code, "-", r.content.decode())
         elif cmd[0] == 'read':
-            filename = cmd[1]
             read_file(filename)
         elif cmd[0] == 'write':
-            filename = cmd[1]
             if not is_cached(filename):
                 print(f"{filename} not cached locally")
                 print(f"You may need to open it first with the \'open\' command")
@@ -115,8 +128,7 @@ def main():
                 with open(filepath, 'rb') as f:
                     url = f"{DIRECTORY_SERVICE}/files"
                     r = requests.post(url, files={"user_file": (filename, f)})
-                    print(r.status_code, "-", r.content)
-            print("Upload not yet implemented")
+                    print(r.status_code, "-", r.content.decode())
         elif cmd[0] == 'help':
             greeting()
         else:
