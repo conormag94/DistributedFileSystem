@@ -2,6 +2,9 @@ version: '2.1'
 
 services:
 
+  ################
+  # File Service #
+  ################
   file-service:
     container_name: file-service
     build: ./file_service
@@ -22,6 +25,39 @@ services:
     environment:
       - APP_SETTINGS=project.config.DevelopmentConfig
 
+  ################
+  # Lock Service #
+  ################
+  lock-db:
+    container_name: lock-db
+    build: ./lock_service/project/db
+    ports:
+        - 5435:5432  # expose ports - HOST:CONTAINER
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: exit 0
+
+  lock-service:
+    container_name: lock-service
+    build: ./lock_service
+    volumes:
+      - './lock_service:/usr/src/app'
+    ports:
+      - 5003:5000 # expose ports - HOST:CONTAINER
+    environment:
+      - APP_SETTINGS=project.config.DevelopmentConfig
+      - DATABASE_URL=postgres://postgres:postgres@lock-db:5432/lock_dev
+    depends_on:
+      lock-db:
+        condition: service_healthy
+    links:
+      - lock-db
+
+  #####################
+  # Directory Service #
+  #####################
   directory-db:
     container_name: directory-db
     build: ./directory_service/project/db
@@ -52,3 +88,4 @@ services:
       - directory-db
       - file-service
       - file-service-2
+      - lock-service

@@ -7,8 +7,12 @@ from flask import current_app as app
 
 files_blueprint = Blueprint('files', __name__)
 
-@files_blueprint.route('/files', methods=['GET'])
+@files_blueprint.route('/', methods=['GET'])
 def index():
+    return "File Service", 200
+
+@files_blueprint.route('/files', methods=['GET'])
+def list_files():
     files_list = os.listdir(app.config['FILES_FOLDER'])
     response = {
         "status": "success",
