@@ -83,6 +83,19 @@ def create_file():
     else:
         return (r.content), r.status_code
 
+@directory.route('/files/<filename>', methods=['PUT'])
+def update_file(filename):
+    if 'user_file' not in request.files:
+        return "No file attached", 400
+    file = request.files["user_file"]
+    existing_file = File.query.filter_by(filename=filename).first()
+    if not existing_file:
+        return "File doesn't exist already, must POST to /files instead", 404
+    else:
+        server = existing_file.to_dict()["url"]
+        r = requests.post(server, files={"user_file": (file.filename, file)})
+        return r.content, r.status_code
+
 @directory.route('/files/<filename>', methods=['DELETE'])
 def delete_file(filename):
 
