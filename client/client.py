@@ -5,11 +5,19 @@ import sys
 import requests
 
 
-prompt = '\033[1;32m' + '> ' + '\033[0;0m'
+current_user = 'NO_USER'
 
 CACHE_LOCATION = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cached_files')
 
 DIRECTORY_SERVICE = "http://192.168.99.100:5000"
+
+def prompt(username):
+    return '\033[1;32m' + username + ': ' + '\033[0;0m'
+
+def switch_user(new_user):
+    global current_user
+    current_user = new_user
+    print(f"Now logged in as {new_user}")
 
 def is_cached(filename):
     cached_file = os.path.join(CACHE_LOCATION, filename)
@@ -54,6 +62,7 @@ def greeting():
     print('Commands:')
     print('---------')
     print('  ls                   - List files (remote and cached)')
+    print('  login <user>         - Login as <user> instead of the default user')
     print('  open <file>          - Download file from remote file system')
     print('  close <file>         - Send any local reads/writes back to remote file system')
     print('  read <file>          - Read contents of locally cached file (.txt files only)')
@@ -65,7 +74,8 @@ def greeting():
 
 def main():
     while(True):
-        cmd = input(prompt).split(' ')
+        p = prompt(current_user)
+        cmd = input(p).split(' ')
         if len(cmd) > 1:
             filename = cmd[1]
         
@@ -85,7 +95,9 @@ def main():
             print("------------------")
             for file in files:
                 print(file["filename"])
-        
+        elif cmd[0] == 'login':
+            username = cmd[1]
+            switch_user(username)
         elif cmd[0] == 'open':
             response = get_file(filename)
             if response.status_code == 200:
@@ -137,4 +149,5 @@ def main():
 
 if __name__ == '__main__':
     greeting()
+    switch_user('user')
     main()
