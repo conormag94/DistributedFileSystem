@@ -17,6 +17,7 @@ directory = Blueprint('directory', __name__)
 
 file_server_1 = os.environ.get("FS1_URL")
 file_server_2 = os.environ.get("FS2_URL")
+lock_service = os.environ.get("LOCK_URL")
 
 file_servers = [
     file_server_1,
@@ -49,13 +50,23 @@ def get_file(filename):
         'message': 'File does not exist'
     }
     try:
-        file_url = File.query.filter_by(filename=filename).first()
-        if not file_url:
+        file_object = File.query.filter_by(filename=filename).first()
+        if not file_object:
             return jsonify(fail_response), 404
         else:
-            file_url = file_url.to_dict()["url"]
-            r = requests.get(f"{file_url}/{filename}")
-            return r.content, r.status_code
+            file_object = file_object.to_dict()
+            
+            lock_url = f"{lock_service}/locks"
+            user = request.headers.get('user')
+            lock_obj = {"id": file_object["id"], "filename": file_object["filename"], "user": user}
+
+            aquire_lock = requests.post(lock_url, json=lock_obj)
+            if aquire_lock.status_code == 201:
+                file_url = file_object["url"]
+                r = requests.get(f"{file_url}/{filename}")
+                return r.content, r.status_code
+            else:
+                return aquire_lock.content, aquire_lock.status_code
     except ValueError:
         return jsonify(fail_response), 404
 

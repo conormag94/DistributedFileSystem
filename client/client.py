@@ -39,7 +39,8 @@ def get_file(filename):
     Get a file from the directory service.
     """
     url = f"{DIRECTORY_SERVICE}/files/{filename}"
-    r = requests.get(url)
+    headers = {'user': current_user}
+    r = requests.get(url, headers=headers)
     return r
 
 def read_file(filename):

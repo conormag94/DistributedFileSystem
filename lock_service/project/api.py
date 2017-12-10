@@ -49,6 +49,7 @@ def check_lock(id):
 @lock.route('/locks', methods=['POST'])
 def lock_file():
     params = request.get_json()
+    print(params)
     filename = params.get('filename')
     file_id = params.get('id')
     user = params.get('user')
@@ -60,6 +61,12 @@ def lock_file():
         }
         return jsonify(response), 400
     else:
+        already_locked = FileLock.query.filter_by(id=file_id).first()
+        if already_locked:
+            return jsonify({
+                "status": "fail", 
+                "message": f"Already locked by {already_locked.to_dict()['user']}"
+            }), 403
         try:
             lock = FileLock(filename=filename, id=file_id, user=user)
             db.session.add(lock)

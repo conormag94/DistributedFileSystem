@@ -81,6 +81,7 @@ services:
       - DATABASE_URL=postgres://postgres:postgres@directory-db:5432/directory_dev
       - FS1_URL=http://file-service:5000   # Can refer to service by name instead of ip
       - FS2_URL=http://file-service-2:5000 # Docker figures out the routing
+      - LOCK_URL=http://lock-service:5000
     depends_on:
       directory-db:
         condition: service_healthy
