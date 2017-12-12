@@ -5,9 +5,10 @@ old_client/
 
 **/__pycache__/
 
-##### CLient #####
+##### Client #####
 # dependencies
 **/node_modules
+**/cached_files/
 
 # testing
 **/coverage

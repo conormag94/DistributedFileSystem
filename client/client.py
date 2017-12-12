@@ -85,17 +85,14 @@ def main():
         
         elif cmd[0] == 'ls':
             cached_files = os.listdir(CACHE_LOCATION)
-            print(f"{len(cached_files)} cached file(s)")
-            print("------------------")
-
-            for file in cached_files:
-                print(file)
-
             files = list_files()["files"]
-            print(f'\n{len(files)} remote file(s):')
+            print(f'\n{len(files)} files - ({len(cached_files)} cached):')
             print("------------------")
             for file in files:
-                print(file["filename"])
+                if file["filename"] in cached_files:
+                    print(f'{file["filename"]} <Cached>')
+                else:
+                    print(f'{file["filename"]}')
         elif cmd[0] == 'login':
             username = cmd[1]
             switch_user(username)
@@ -117,8 +114,11 @@ def main():
                 filepath = cache_path(filename)
                 with open(filepath, 'rb') as f:
                     url = f"{DIRECTORY_SERVICE}/files/{filename}"
-                    r = requests.put(url, files={'user_file': (filename, f)})
+                    r = requests.put(url, headers={'user': current_user}, files={'user_file': (filename, f)})
                     print(r.status_code, "-", r.content.decode())
+                if r.status_code == 200:
+                    os.remove(filepath)
+                    print("Cached file removed")
         elif cmd[0] == 'read':
             read_file(filename)
         elif cmd[0] == 'write':

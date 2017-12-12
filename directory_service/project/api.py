@@ -103,9 +103,24 @@ def update_file(filename):
     if not existing_file:
         return "File doesn't exist already, must POST to /files instead", 404
     else:
-        server = existing_file.to_dict()["url"]
-        r = requests.post(server, files={"user_file": (file.filename, file)})
-        return r.content, r.status_code
+        existing_file = existing_file.to_dict()
+        # Check if locked by user
+        lock_url = f"{lock_service}/locks/{existing_file['id']}"
+        user = request.headers.get('user')
+        lock_status = requests.get(lock_url, headers={'user': user})
+        if lock_status.status_code == 200:      
+            server = existing_file["url"]
+            r = requests.post(server, files={"user_file": (file.filename, file)})
+            if r.status_code == 200:
+                unlock = requests.delete(lock_url, headers={'user': user})
+                if unlock.status_code == 200:
+                    return r.content, r.status_code
+                else:
+                    return unlock.content, unlock.status_code
+            else:
+                return r.content, r.status_code
+        else:
+            return lock_status.content, lock_status.status_code
 
 @directory.route('/files/<filename>', methods=['DELETE'])
 def delete_file(filename):
