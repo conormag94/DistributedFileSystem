@@ -7,6 +7,11 @@
 - [x] Lock Service
 - [x] Client (transparent file access)
 - [x] Caching
+- [x] Security Service (partial)
+
+## Distributed File System
+
+This is an upload/download model of distributed file system where each service is a separate Python web application written in Flask. I use docker for running the system and also for networking. Each service runs in its own Docker container and is linked to any other services it needs to communicate with via docker-compose links in the `docker-compose.yml` file. Any services which need a database are using PostgreSQL databases running as their own Docker container.
 
 ## Running
 
@@ -22,6 +27,7 @@ $ docker-compose up -d
 **2. Create the databases**
 ```shell
 $ docker-compose run lock-service python manage.py recreate_db
+$ docker-compose run security-service python manage.py recreate_db
 $ docker-compose run directory-service python manage.py recreate_db
 ```
 
@@ -111,3 +117,35 @@ The standard workflow of the client is that they will list all the files on the 
 ## Caching
 
 Caching is performed on the client after a file is opened. Opening a file downloads it from the DFS (to the `cached_files/` directory) and locks it. Reads and writes go to the cached copy. When the file is closed, the remote copy is updated and the cached copy is deleted. The combination of locking a file and caching only while the file is opened means that no cache validation is required. Only one user can lock and cache a file so they will always have the most up to date copy.
+
+## Security Service
+
+I have partially implemented a token based security service. The API has been finished but it is not fully integrated with the DFS. It is responsible for registering and logging in users, as well as keeping a record of active session tokens given to users. When a user logs in, it returns a random `SessionToken` object and adds it to the database. The user would then attach this token in the headers of any request it sends to the Directory Service. The directory service would then trigger a check of this token before every request using the `@directory.before_request` decorator. This request still fires but is only a mock version which sends a dummy request to the Security Service
+
+This is not fully implemented into the DFS. Currently, the client registers and logs in with the Security Service, but it still sends just its user name in the headers instead of the token. And the Directory Service only checks this user name for the lock service, not the security service. 
+
+**User Model**
+```python
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    username = db.Column(db.String(128), nullable=False)
+    password = db.Column(db.String(128), nullable=False)
+```
+
+**SessionToken Model**
+```python
+class SessionToken(db.Model):
+    token = db.Column(db.String(128), primary_key=True, nullable=False)
+    username = db.Column(db.String(128),  nullable=False)
+```
+
+**API**
+
+| HTTP verb | Endpoint | Description |
+| --------- | -------- | ------------|
+| GET       | /users   | List of all `Users` registered |
+| GET | /tokens | Get list of all active `SessionTokens` |
+| POST | /register | Register a new `User`|
+| POST | /login | Log a user in and generate a new session token |
+| POST | /logout | Log a `User` out |
+| GET | /verify | Verify if the `SessionToken` contained in the header is valid or not
