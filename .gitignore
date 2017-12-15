@@ -8,7 +8,6 @@ old_client/
 ##### Client #####
 # dependencies
 **/node_modules
-**/cached_files/
 
 # testing
 **/coverage
