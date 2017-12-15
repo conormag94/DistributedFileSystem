@@ -46,6 +46,10 @@ The File Service stores static files on its own file system. It exposes an API t
 
 ## Directory Service
 
+The Directory Service is responsible for storing files on and retrieving files from the various File Servers on behalf of the client. It presents the client with a view of a flat remote file system. Due to the flat structure, a file server is chosen at random to store a file when it first gets uploaded. The Directory Service keeps a PostreSQL database of `File` objects (see below) and updates them as they are updated and deleted.
+
+It also acts as a middle man between the client and the other services such as the lock service. It queries the Lock Service's API before granting the client access to any files. This has the advantage that does not need to query the service directly and also that they cannot ignore locks.
+
 **File object**
 
 ```python
@@ -85,3 +89,25 @@ class FileLock():
 | GET | /locks/:id | Get the lock corresponding to file with id of :id (if it exists) |
 | POST | /locks | Lock a file by storing a FileLock in the db corresponding to a file |
 | DELETE | /locks/:id | Unlock file with id of :id, deleting lock from db |
+
+## Client
+
+The Client is a separate Python command line program that provides easy access for the DFS. All of the client's actions go through the Directory Service first and the client does not need to know the locations of any of the file servers, lock service, etc. (transparent file access). 
+
+The standard workflow of the client is that they will list all the files on the DFS (hiding any notion of different file servers). They can then open (download) the file, caching it locally and locking the file for themselves. Any reads and writes go to this cached copy. No other user can modify the file while it is opened, due to the lock. When done editing the file, they will close it. This sends the updates to the remote copy and unlocks the file.
+
+**Commands**
+
+![Commands](screenshots/help.png)
+
+**Sample Usage**
+
+![Sample Run](screenshots/sample_run.png)
+
+**Sample Usage (locking)**
+
+![Sample Run (locking)](screenshots/sample_run_locking.png)
+
+## Caching
+
+Caching is performed on the client after a file is opened. Opening a file downloads it from the DFS (to the `cached_files/` directory) and locks it. Reads and writes go to the cached copy. When the file is closed, the remote copy is updated and the cached copy is deleted. The combination of locking a file and caching only while the file is opened means that no cache validation is required. Only one user can lock and cache a file so they will always have the most up to date copy.
