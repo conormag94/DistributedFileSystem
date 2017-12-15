@@ -23,8 +23,8 @@ class User(db.Model):
         }
 
 class SessionToken(db.Model):
-    username = db.Column(db.String(128), primary_key=True, nullable=False)
-    token = db.Column(db.String(128), nullable=False)
+    username = db.Column(db.String(128),  nullable=False)
+    token = db.Column(db.String(128), primary_key=True, nullable=False)
 
     def __init__(self, username):
         self.username = username

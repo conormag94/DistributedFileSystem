@@ -7,7 +7,7 @@ import requests
 
 
 current_user = 'NO_USER'
-current_token = None
+current_token = 'NO_TOKEN'
 
 CACHE_LOCATION = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cached_files')
 
@@ -25,6 +25,11 @@ def register(**login_credentials):
 def login(**login_credentials):
     url = f"{SECURITY_SERVICE}/login"
     r = requests.post(url, json=login_credentials)
+    return r
+
+def logout(token):
+    url = f"{SECURITY_SERVICE}/login"
+    r = requests.post(url, json={"token": token})
     return r
 
 def switch_user(new_user):
@@ -87,6 +92,8 @@ def greeting():
     print('---------')
     print('  ls                   - List files (remote and cached)')
     print('  login <user>         - Login as <user> instead of the default user')
+    print('  register <user>      - Regsiter a new <user>')
+    print('  logout               - Logout and return to default user')
     print('  open <file>          - Download file from remote file system')
     print('  close <file>         - Send any local reads/writes back to remote file system')
     print('  read <file>          - Read contents of locally cached file (.txt files only)')
@@ -119,6 +126,18 @@ def main():
         elif cmd[0] == 'login':
             username = cmd[1]
             switch_user(username)
+        elif cmd[0] == 'register':
+            username = cmd[1]
+            password = getpass.getpass("Password: ")
+            credentials = {"username": username, "password": password} 
+            r = register(**credentials)
+            if r.status_code == 200:
+                switch_user(username)
+            else:
+                print(r.content)
+        elif cmd[0] == 'logout':
+            username = current_user
+            logout(username)
         elif cmd[0] == 'open':
             response = get_file(filename)
             if response.status_code == 200:

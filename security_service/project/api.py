@@ -93,3 +93,23 @@ def login_user():
     response = generate_token(username, password)
 
     return response
+
+@security.route('/logout', methods=['POST'])
+def logout_user():
+    token = data.get('token')
+
+    existing_token = SessionToken.query.filter_by(token=token).first()
+
+    if not existing_token:
+        return jsonify({"status": "fail", "message": "Invalid token"}), 403
+
+    try:
+        username = existing_token.to_dict()['username']
+        db.session.remove(existing_token)
+        db.session.commit()
+
+        return jsonify({"status": "success", "message": f"{username} has been logged out"}), 200
+
+    except:
+        return jsonify({"status": "fail", "message": "Unable to log user out"}), 500
+    
