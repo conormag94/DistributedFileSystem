@@ -18,11 +18,20 @@ directory = Blueprint('directory', __name__)
 file_server_1 = os.environ.get("FS1_URL")
 file_server_2 = os.environ.get("FS2_URL")
 lock_service = os.environ.get("LOCK_URL")
+security_service = os.environ.get("SECURITY_URL")
 
 file_servers = [
     file_server_1,
     file_server_2
 ]
+
+def check_auth():
+    r = requests.get(security_service)
+    print(r.status_code == 200, file=sys.stdout)
+
+@directory.before_request
+def verify_user():
+    check_auth()
 
 @directory.route('/', methods=['GET'])
 def index():
