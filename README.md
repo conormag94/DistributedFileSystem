@@ -1,5 +1,7 @@
 # CS7NS1 Distributed File System
 
+Conor Maguire - 13323317
+
 ## Components implemented
 
 - [x] File Service
