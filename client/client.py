@@ -1,3 +1,4 @@
+import getpass
 import os
 import sys
 
@@ -6,18 +7,40 @@ import requests
 
 
 current_user = 'NO_USER'
+current_token = None
 
 CACHE_LOCATION = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cached_files')
 
 DIRECTORY_SERVICE = "http://192.168.99.100:5000"
+SECURITY_SERVICE = "http://192.168.99.100:5004"
 
 def prompt(username):
     return '\033[1;32m' + username + ': ' + '\033[0;0m'
 
+def register(**login_credentials):
+    url = f"{SECURITY_SERVICE}/register"
+    r = requests.post(url, json=login_credentials)
+    return r
+
+def login(**login_credentials):
+    url = f"{SECURITY_SERVICE}/login"
+    r = requests.post(url, json=login_credentials)
+    return r
+
 def switch_user(new_user):
-    global current_user
-    current_user = new_user
-    print(f"Now logged in as {new_user}")
+    password = getpass.getpass(f'Password for {new_user}: ')
+    credentials = {"username": new_user, "password": password} 
+    response = login(**credentials)
+    if response.status_code == 200:
+        global current_user
+        global access_token
+        
+        current_user = new_user
+        token = response.json()['token']
+        access_token = token
+        print(f"Now logged in as {new_user}")
+    else:
+        print(response.json()['message'])
 
 def is_cached(filename):
     cached_file = os.path.join(CACHE_LOCATION, filename)
