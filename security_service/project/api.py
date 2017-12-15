@@ -11,8 +11,9 @@ from flask import current_app as app
 security = Blueprint('security', __name__)
 
 def generate_token(username, password):
-    if SessionToken.query.filter_by(username=username.lower()).first() is not None:
-        return jsonify({"status": "fail", "message": "User already logged in"}), 403
+    token = SessionToken.query.filter_by(username=username.lower()).first()
+    if token:
+        return jsonify({"status": "fail", "token": token.to_hex}), 403
 
     user = User.query.filter_by(username=username.lower()).first()
     if not user:
@@ -112,4 +113,16 @@ def logout_user():
 
     except:
         return jsonify({"status": "fail", "message": "Unable to log user out"}), 500
+
+@security.route('/verify', methods=['GET'])
+def verify_user():
+    token = request.headers.get('token')
+    if not token:
+        return jsonify({"status": "fail", "message": "No token"}), 403
+
+    existing_token = SessionToken.query.filter_by(token=token).first()
+    if existing_token:
+        return jsonify({"status": "success", "message": "Valid token"}), 200
+    else:
+        return jsonify({"status": "fail", "message": "Invalid token"}), 404
     
